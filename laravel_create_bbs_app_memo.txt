@@ -1,0 +1,1342 @@
+2019/08/07
+# 参考
+https://umaroidblog.com/laravel-tutorial1
+https://blog.hiroyuki90.com/articles/laravel-bbs/
+
+###----- 要約 ----
+# アプリ作成
+composer create-project laravel/laravel xxx
+cd xxx/
+# サーバ起動
+php artisan serve --port=8080
+# マイグレーションファイルの作成
+php artisan make:migration create_xxxs_table --create=xxxs
+# マイグレーションの実行
+php artisan migrate
+# モデルの作成
+php artisan make:model Xxx
+# コントローラの作成
+php artisan make:controller XxxsController
+    public function index()
+    {
+        //$posts = Post::orderBy('created_at', 'desc')->get();
+        $posts = Post::orderBy('created_at', 'desc')->paginate(10);
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+
+# ルーティング設定 routes/web.php
+Route::get('/', 'PostsController@index')->name('top');
+Route::resource('posts', 'PostsController', ['only' => ['create', 'store', 'show', 'edit', 'update', 'destroy']]);
+Route::resource('comments', 'CommentsController', ['only' => ['store']]);
+# ビューの作成は手打ち
+# resources/views/layout.blade.php <-- 共通レイアウト
+<body>
+    <div>
+        @yield('content')
+    </div>
+</body>
+# resources/views/posts/index.blade.php <- viewごと
+/*
+@extends('layout')
+
+@section('content')
+...
+@endsection
+*/
+
+
+
+
+
+
+
+# Laravelアプリケーションを作成する
+composer create-project laravel/laravel bbs
+
+# app フォルダへ移動
+cd bbs/
+
+# Laravelのバージョンを確認する
+php artisan --version;
+# Laravel Framework 5.8.31
+
+# サーバー起動
+php artisan serve --port=8080
+# preview running application
+# ダミーページ表示成功
+
+# 初期設定
+# 日本語環境の設定
+# config/app.php
+'timezone' => 'Asia/Tokyo',
+'locale' => 'ja',
+
+# マイグレーションのファイルの作成
+php artisan make:migration create_posts_table --create=posts
+php artisan make:migration create_comments_table --create=comments
+# app/databse/migration に　ファイルが作成される
+# xx.create_posts_table.php, xx_create_comments_table.php
+
+# マイグレーションファイルの編集
+# xx.create_posts_table.php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreatePostsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('posts', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('title', 50);
+            $table->text('body');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('posts');
+    }
+}
+
+# xx_create_comments_table.php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateCommentsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('comments', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('post_id');
+            $table->text('body');
+            $table->timestamps();
+
+            $table->foreign('post_id')->references('id')->on('posts');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('comments');
+    }
+}
+
+# .envファイルの編集
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=root
+DB_PASSWORD=
+
+# mysql で laravel というデータベースを作成
+sudo mysql
+mysql> create database laravel;
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| laravel            |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+
+# マイグレーションの実行
+php artisan migrate
+Migration table created successfully.
+Migrating: 2014_10_12_000000_create_users_table
+Migrated:  2014_10_12_000000_create_users_table (0.03 seconds)
+Migrating: 2014_10_12_100000_create_password_resets_table
+Migrated:  2014_10_12_100000_create_password_resets_table (0.03 seconds)
+Migrating: 2019_08_07_092026_create_posts_table
+Migrated:  2019_08_07_092026_create_posts_table (0.01 seconds)
+Migrating: 2019_08_07_092044_create_comments_table
+Migrated:  2019_08_07_092044_create_comments_table (0.04 seconds)
+# 成功
+
+sudo mysql
+mysql> use laravel;
+mysql> show tables;
++-------------------+
+| Tables_in_laravel |
++-------------------+
+| comments          |
+| migrations        |
+| password_resets   |
+| posts             |
+| users             |
++-------------------+
+5 rows in set (0.00 sec)
+
+mysql> desc posts;
++------------+------------------+------+-----+---------+----------------+
+| Field      | Type             | Null | Key | Default | Extra          |
++------------+------------------+------+-----+---------+----------------+
+| id         | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| title      | varchar(50)      | NO   |     | NULL    |                |
+| body       | text             | NO   |     | NULL    |                |
+| created_at | timestamp        | YES  |     | NULL    |                |
+| updated_at | timestamp        | YES  |     | NULL    |                |
++------------+------------------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+mysql> desc comments;
++------------+------------------+------+-----+---------+----------------+
+| Field      | Type             | Null | Key | Default | Extra          |
++------------+------------------+------+-----+---------+----------------+
+| id         | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| post_id    | int(10) unsigned | NO   | MUL | NULL    |                |
+| body       | text             | NO   |     | NULL    |                |
+| created_at | timestamp        | YES  |     | NULL    |                |
+| updated_at | timestamp        | YES  |     | NULL    |                |
++------------+------------------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+mysql> exit;
+
+# モデルの作成
+php artisan make:model Post
+#Model created successfully.
+php artisan make:model Comment
+#Model created successfully.
+
+# app/Post.php, app/Comment.php が生成
+
+# app/Post.php を編集
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    protected $fillable = [
+        'title',
+        'body',
+    ];
+
+    public function comments()
+    {
+        return $this->hasMany('App\Comment');
+    }
+}
+# app/Comment.php を編集
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Comment extends Model
+{
+    protected $fillable = [
+        'body',
+    ];
+
+    public function post()
+    {
+        return $this->belongsTo('App\Post');
+    }
+}
+
+# テストデータ作成
+php artisan make:factory PostFactory --model=Post
+# Factory created successfully.
+php artisan make:factory CommentFactory --model=Comment
+# Factory created successfully.
+
+# database/factories/PostFactory.php, database/factories/UserFactory.phpが作成
+
+# PostFactory.php の編集
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Post;
+use Faker\Generator as Faker;
+
+$factory->define(Post::class, function (Faker $faker) {
+    return [
+        'title' => '投稿のタイトル',
+        'body' => "本文です。テキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト。\nテキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト。テキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト。",
+    ];
+});
+
+# CommentFactory の編集
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Comment;
+use Faker\Generator as Faker;
+
+$factory->define(Comment::class, function (Faker $faker) {
+    return [
+        'body' => "コメントです。テキストテキストテキストテキストテキストテキスト。\nテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキストテキスト。",
+    ];
+});
+
+# 実行用のシーダークラスを作成
+php artisan make:seeder PostsTableSeeder
+# Seeder created successfully.
+# database/seeds/PostsTableSeeder.php が生成
+
+# PostsTableSeeder.php の編集
+<?php
+
+use Illuminate\Database\Seeder;
+use App\Post;
+use App\Comment;;
+
+class PostsTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        factory(Post::class, 50)
+            ->create()
+            ->each(function ($post) {
+                $comments = factory(App\Comment::class, 2)->make();
+                $post->comments()->saveMany($comments);
+            });
+    }
+}
+
+# 50件の投稿を作成して、各投稿に2つのコメントを作成
+# database/seeds/DatabaseSeeder.phpを編集
+<?php
+
+use Illuminate\Database\Seeder;
+use App\Post;
+use App\Comment;;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        $this->call(PostsTableSeeder::class);
+    }
+}
+
+
+# テストデータをテーブルに追加
+composer dump-autoload
+php artisan db:seed
+
+php artisan serve --port=8080
+
+# ルーティング設定 routes/web.php
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+/*Route::get('/', function () {
+    return view('welcome');
+});*/
+Route::get('/', 'PostsController@index')->name('top');
+
+# コントローラの作成
+php artisan make:controller PostsController
+# Controller created successfully.
+
+# app/Http/controllers/PostController.php が生成。以下のように編集
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class PostsController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+}
+
+# resources/views/layout.blade.phpを作成。
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Laravel BBS</title>
+
+    <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous"
+    >
+</head>
+<body>
+    <header class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url('') }}">
+                Laravel BBS
+            </a>
+        </div>
+    </header>
+
+    <div>
+        @yield('content')
+    </div>
+</body>
+</html>
+
+# resources/views/posts/index.blade.php の作成
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        @foreach ($posts as $post)
+            <div class="card mb-4">
+                <div class="card-header">
+                    {{ $post->title }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {!! nl2br(e(str_limit($post->body, 200))) !!}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <span class="mr-2">
+                        投稿日時 {{ $post->created_at->format('Y.m.d') }}
+                    </span>
+
+                    @if ($post->comments->count())
+                        <span class="badge badge-primary">
+                            コメント {{ $post->comments->count() }}件
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endsection
+
+# php artisan serve --port=8080
+# 表示成功
+
+#### 投稿できるようにする
+# ルーティング設定 routes/web.php の最終行に追加
+Route::resource('posts', 'PostsController', ['only' => ['create', 'store']]);
+
+# PostsControllerに処理を追加
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class PostsController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+    public function create()
+    {
+        return view('posts.create');
+    }
+    
+    public function store(Request $request)
+    {
+        $params = $request->validate([
+        'title' => 'required|max:50',
+        'body' => 'required|max:2000',
+        ]);
+        
+        Post::create($params);
+        
+        return redirect()->route('top');
+    }
+}
+
+# resources/views/posts/create.blade.phpを作成して、以下のように編集
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="border p-4">
+            <h1 class="h5 mb-4">
+                投稿の新規作成
+            </h1>
+
+            <form method="POST" action="{{ route('posts.store') }}">
+                @csrf
+
+                <fieldset class="mb-4">
+                    <div class="form-group">
+                        <label for="title">
+                            タイトル
+                        </label>
+                        <input
+                            id="title"
+                            name="title"
+                            class="form-control {{ $errors->has('title') ? 'is-invalid' : '' }}"
+                            value="{{ old('title') }}"
+                            type="text"
+                        >
+                        @if ($errors->has('title'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('title') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label for="body">
+                            本文
+                        </label>
+
+                        <textarea
+                            id="body"
+                            name="body"
+                            class="form-control {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                            rows="4"
+                        >{{ old('body') }}</textarea>
+                        @if ($errors->has('body'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('body') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mt-5">
+                        <a class="btn btn-secondary" href="{{ route('top') }}">
+                            キャンセル
+                        </a>
+
+                        <button type="submit" class="btn btn-primary">
+                            投稿する
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+@endsection
+
+# resources/views/posts/index.blade.php を編集
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="mb-4">
+            <a href="{{ route('posts.create') }}" class="btn btn-primary">
+            投稿を新規作成する
+            </a>
+        </div>
+        @foreach ($posts as $post)
+            <div class="card mb-4">
+                <div class="card-header">
+                    {{ $post->title }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {!! nl2br(e(str_limit($post->body, 200))) !!}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <span class="mr-2">
+                        投稿日時 {{ $post->created_at->format('Y.m.d') }}
+                    </span>
+
+                    @if ($post->comments->count())
+                        <span class="badge badge-primary">
+                            コメント {{ $post->comments->count() }}件
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endsection
+
+# 投稿の詳細・コメントの機能
+# routes/web.php の編集
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+/*Route::get('/', function () {
+    return view('welcome');
+});*/
+Route::get('/', 'PostsController@index')->name('top');
+Route::resource('posts', 'PostsController', ['only' => ['create', 'store', 'show']]);
+
+# PostsController.php を編集
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class PostsController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+    public function create()
+    {
+        return view('posts.create');
+    }
+    
+    public function store(Request $request)
+    {
+        $params = $request->validate([
+        'title' => 'required|max:50',
+        'body' => 'required|max:2000',
+        ]);
+        
+        Post::create($params);
+        
+        return redirect()->route('top');
+    }
+    
+    public function show($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        return view('posts.show', [
+            'post' => $post,
+        ]);
+    }
+}
+# resources/views/posts/show.blade.php
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="border p-4">
+            <h1 class="h5 mb-4">
+                {{ $post->title }}
+            </h1>
+
+            <p class="mb-5">
+                {!! nl2br(e($post->body)) !!}
+            </p>
+
+            <section>
+                <h2 class="h5 mb-4">
+                    コメント
+                </h2>
+
+                @forelse($post->comments as $comment)
+                    <div class="border-top p-4">
+                        <time class="text-secondary">
+                            {{ $comment->created_at->format('Y.m.d H:i') }}
+                        </time>
+                        <p class="mt-2">
+                            {!! nl2br(e($comment->body)) !!}
+                        </p>
+                    </div>
+                @empty
+                    <p>コメントはまだありません。</p>
+                @endforelse
+            </section>
+        </div>
+    </div>
+@endsection
+
+# resources/views/posts/index.blade.php
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="mb-4">
+            <a href="{{ route('posts.create') }}" class="btn btn-primary">
+            投稿を新規作成する
+            </a>
+        </div>
+        @foreach ($posts as $post)
+            <div class="card mb-4">
+                <div class="card-header">
+                    {{ $post->title }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {!! nl2br(e(str_limit($post->body, 200))) !!}
+                    </p>
+
+                    <a class="card-link" href="{{ route('posts.show', ['post' => $post]) }}">
+                        続きを読む
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <span class="mr-2">
+                        投稿日時 {{ $post->created_at->format('Y.m.d') }}
+                    </span>
+
+                    @if ($post->comments->count())
+                        <span class="badge badge-primary">
+                            コメント {{ $post->comments->count() }}件
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endsection
+
+# コメントの追加
+# web.php
+Route::resource('comments', 'CommentsController', ['only' => ['store']]);
+
+# コントローラ作成
+php artisan make:controller CommentsController
+# Controller created successfully.
+
+# CommentsControllerの編集
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class CommentsController extends Controller
+{
+    public function store(Request $request)
+    {
+        $params = $request->validate([
+            'post_id' => 'required|exists:posts,id',
+            'body' => 'required|max:2000',
+        ]);
+
+        $post = Post::findOrFail($params['post_id']);
+        $post->comments()->create($params);
+
+        return redirect()->route('posts.show', ['post' => $post]);
+    }
+}
+
+# resources/views/posts/show.blade.ph
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="border p-4">
+            <h1 class="h5 mb-4">
+                {{ $post->title }}
+            </h1>
+
+            <p class="mb-5">
+                {!! nl2br(e($post->body)) !!}
+            </p>
+            
+            <form class="mb-4" method="POST" action="{{ route('comments.store') }}">
+                @csrf
+                
+                <input
+                    name="post_id"
+                    type="hidden"
+                    value="{{ $post->id }}"
+                >
+                
+                <div class="form-group">
+                    <label for="body">
+                        本文
+                    </label>
+                    
+                    <textarea
+                        id="body"
+                        name="body"
+                        class="form-control {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                        rows="4"
+                        >{{ old('body') }}
+                    </textarea>
+                    
+                    @if ($errors->has('body'))
+                        <div class="invalid-feedback">
+                            {{ $errors->first('body') }}
+                        </div>
+                    @endif
+                </div>
+                
+                <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                コメントする
+                </button>
+                </div>
+            </form>
+
+            <section>
+                <h2 class="h5 mb-4">
+                    コメント
+                </h2>
+
+                @forelse($post->comments as $comment)
+                    <div class="border-top p-4">
+                        <time class="text-secondary">
+                            {{ $comment->created_at->format('Y.m.d H:i') }}
+                        </time>
+                        <p class="mt-2">
+                            {!! nl2br(e($comment->body)) !!}
+                        </p>
+                    </div>
+                @empty
+                    <p>コメントはまだありません。</p>
+                @endforelse
+            </section>
+        </div>
+    </div>
+@endsection
+
+# 投稿の編集
+# web.phpの編集
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+/*Route::get('/', function () {
+    return view('welcome');
+});*/
+Route::get('/', 'PostsController@index')->name('top');
+Route::resource('posts', 'PostsController', ['only' => ['create', 'store', 'show', 'edit', 'update']]);
+Route::resource('comments', 'CommentsController', ['only' => ['store']]);
+
+# PostsContollerを編集
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class PostsController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+    public function create()
+    {
+        return view('posts.create');
+    }
+    
+    public function store(Request $request)
+    {
+        $params = $request->validate([
+        'title' => 'required|max:50',
+        'body' => 'required|max:2000',
+        ]);
+        
+        Post::create($params);
+        
+        return redirect()->route('top');
+    }
+    
+    public function show($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        return view('posts.show', [
+            'post' => $post,
+        ]);
+    }
+    
+    public function edit($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        
+        return view('posts.edit', [
+            'post' => $post,
+        ]);
+    }
+    
+    public function update($post_id, Request $request)
+    {
+        $params = $request->validate([
+            'title' => 'required|max:50',
+            'body' => 'required|max:2000',
+        ]);
+        
+        $post = Post::findOrFail($post_id);
+        $post->fill($params)->save();
+        
+        return redirect()->route('posts.show', ['post' => $post]);
+    }
+}
+
+# resources/views/posts/edit.blade.php の作成 
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="border p-4">
+            <h1 class="h5 mb-4">
+                投稿の編集
+            </h1>
+
+            <form method="POST" action="{{ route('posts.update', ['post' => $post]) }}">
+                @csrf
+                @method('PUT')
+
+                <fieldset class="mb-4">
+                    <div class="form-group">
+                        <label for="title">
+                            タイトル
+                        </label>
+                        <input
+                            id="title"
+                            name="title"
+                            class="form-control {{ $errors->has('title') ? 'is-invalid' : '' }}"
+                            value="{{ old('title') ?: $post->title }}"
+                            type="text"
+                        >
+                        @if ($errors->has('title'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('title') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label for="body">
+                            本文
+                        </label>
+
+                        <textarea
+                            id="body"
+                            name="body"
+                            class="form-control {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                            rows="4"
+                        >{{ old('body') ?: $post->body }}</textarea>
+                        @if ($errors->has('body'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('body') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mt-5">
+                        <a class="btn btn-secondary" href="{{ route('posts.show', ['post' => $post]) }}">
+                            キャンセル
+                        </a>
+
+                        <button type="submit" class="btn btn-primary">
+                            更新する
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+@endsection
+
+# resources/views/posts/show.blade.php
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        
+        
+        
+        <div class="border p-4">
+            
+            <div class="mb-4 text-right">
+                <a class="btn btn-primary" href="{{ route('posts.edit', ['post' => $post]) }}">
+                    編集する
+                </a>
+            </div>
+            
+            <h1 class="h5 mb-4">
+                {{ $post->title }}
+            </h1>
+
+            <p class="mb-5">
+                {!! nl2br(e($post->body)) !!}
+            </p>
+            
+            <form class="mb-4" method="POST" action="{{ route('comments.store') }}">
+                @csrf
+                
+                <input
+                    name="post_id"
+                    type="hidden"
+                    value="{{ $post->id }}"
+                >
+                
+                <div class="form-group">
+                    <label for="body">
+                        本文
+                    </label>
+                    
+                    <textarea
+                        id="body"
+                        name="body"
+                        class="form-control {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                        rows="4"
+                        >{{ old('body') }}
+                    </textarea>
+                    
+                    @if ($errors->has('body'))
+                        <div class="invalid-feedback">
+                            {{ $errors->first('body') }}
+                        </div>
+                    @endif
+                </div>
+                
+                <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                コメントする
+                </button>
+                </div>
+            </form>
+
+            <section>
+                <h2 class="h5 mb-4">
+                    コメント
+                </h2>
+
+                @forelse($post->comments as $comment)
+                    <div class="border-top p-4">
+                        <time class="text-secondary">
+                            {{ $comment->created_at->format('Y.m.d H:i') }}
+                        </time>
+                        <p class="mt-2">
+                            {!! nl2br(e($comment->body)) !!}
+                        </p>
+                    </div>
+                @empty
+                    <p>コメントはまだありません。</p>
+                @endforelse
+            </section>
+        </div>
+    </div>
+@endsection
+
+# 投稿の削除
+# web.php
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+/*Route::get('/', function () {
+    return view('welcome');
+});*/
+Route::get('/', 'PostsController@index')->name('top');
+Route::resource('posts', 'PostsController', ['only' => ['create', 'store', 'show', 'edit', 'update', 'destroy']]);
+Route::resource('comments', 'CommentsController', ['only' => ['store']]);
+
+# PostsController
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Post;
+
+class PostsController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+
+        return view('posts.index', ['posts' => $posts]);
+    }
+    public function create()
+    {
+        return view('posts.create');
+    }
+    
+    public function store(Request $request)
+    {
+        $params = $request->validate([
+        'title' => 'required|max:50',
+        'body' => 'required|max:2000',
+        ]);
+        
+        Post::create($params);
+        
+        return redirect()->route('top');
+    }
+    
+    public function show($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        return view('posts.show', [
+            'post' => $post,
+        ]);
+    }
+    
+    public function edit($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        
+        return view('posts.edit', [
+            'post' => $post,
+        ]);
+    }
+    
+    public function update($post_id, Request $request)
+    {
+        $params = $request->validate([
+            'title' => 'required|max:50',
+            'body' => 'required|max:2000',
+        ]);
+        
+        $post = Post::findOrFail($post_id);
+        $post->fill($params)->save();
+        
+        return redirect()->route('posts.show', ['post' => $post]);
+    }
+    
+    public function destroy($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        
+        \DB::transaction(function () use ($post) {
+            $post->comments()->delete();
+            $post->delete();
+        });
+        
+        return redirect()->route('top');
+    }
+}
+
+
+# resources/views/posts/show.blade.php
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        
+        
+        
+        <div class="border p-4">
+            
+            <div class="mb-4 text-right">
+                <a class="btn btn-primary" href="{{ route('posts.edit', ['post' => $post]) }}">
+                    編集する
+                </a>
+            
+                <form
+                    style="display: inline-block;"
+                    method="POST"
+                    action="{{ route('posts.destroy', ['post' => $post]) }}"
+                    >
+                    @csrf
+                    @method('DELETE')
+                    
+                    <button class="btn btn-danger">削除する</button>
+                </form>
+            </div>
+            
+            <h1 class="h5 mb-4">
+                {{ $post->title }}
+            </h1>
+
+            <p class="mb-5">
+                {!! nl2br(e($post->body)) !!}
+            </p>
+            
+            <form class="mb-4" method="POST" action="{{ route('comments.store') }}">
+                @csrf
+                
+                <input
+                    name="post_id"
+                    type="hidden"
+                    value="{{ $post->id }}"
+                >
+                
+                <div class="form-group">
+                    <label for="body">
+                        本文
+                    </label>
+                    
+                    <textarea
+                        id="body"
+                        name="body"
+                        class="form-control {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                        rows="4"
+                        >{{ old('body') }}
+                    </textarea>
+                    
+                    @if ($errors->has('body'))
+                        <div class="invalid-feedback">
+                            {{ $errors->first('body') }}
+                        </div>
+                    @endif
+                </div>
+                
+                <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    コメントする
+                </button>
+                </div>
+            </form>
+
+            <section>
+                <h2 class="h5 mb-4">
+                    コメント
+                </h2>
+
+                @forelse($post->comments as $comment)
+                    <div class="border-top p-4">
+                        <time class="text-secondary">
+                            {{ $comment->created_at->format('Y.m.d H:i') }}
+                        </time>
+                        <p class="mt-2">
+                            {!! nl2br(e($comment->body)) !!}
+                        </p>
+                    </div>
+                @empty
+                    <p>コメントはまだありません。</p>
+                @endforelse
+            </section>
+        </div>
+    </div>
+@endsection
+
+# ページネーションの実装
+# PostsControllerのindexメソッド
+public function index()
+{
+    //$posts = Post::orderBy('created_at', 'desc')->get();
+    $posts = Post::orderBy('created_at', 'desc')->paginate(10);
+
+    return view('posts.index', ['posts' => $posts]);
+}
+
+# resources/views/posts/index.blade.php
+@extends('layout')
+
+@section('content')
+    <div class="container mt-4">
+        <div class="mb-4">
+            <a href="{{ route('posts.create') }}" class="btn btn-primary">
+            投稿を新規作成する
+            </a>
+        </div>
+        @foreach ($posts as $post)
+            <div class="card mb-4">
+                <div class="card-header">
+                    {{ $post->title }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {!! nl2br(e(str_limit($post->body, 200))) !!}
+                    </p>
+
+                    <a class="card-link" href="{{ route('posts.show', ['post' => $post]) }}">
+                        続きを読む
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <span class="mr-2">
+                        投稿日時 {{ $post->created_at->format('Y.m.d') }}
+                    </span>
+
+                    @if ($post->comments->count())
+                        <span class="badge badge-primary">
+                            コメント {{ $post->comments->count() }}件
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="d-flex justify-content-center mb-5">
+        {{ $posts->links() }}
+    </div>
+@endsection
+
+#  git 
+git init
+git add -A
+git status
+git commit -m 'BBS作成完了'
+git log
+

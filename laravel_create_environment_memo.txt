@@ -1,0 +1,67 @@
+2019/08/07
+# 参考
+https://umaroidblog.com/laravel-tutorial1
+
+php -v
+#PHP 5.6.40 (cli) (built: Mar  8 2019 18:17:39) 
+#Copyright (c) 1997-2016 The PHP Group
+#Zend Engine v2.6.0, Copyright (c) 1998-2016 Zend Technologies
+#    with Xdebug v2.5.5, Copyright (c) 2002-2017, by Derick Rethans
+
+# composer（PHPライブラリの管理ツール） のインストール
+curl -sS https://getcomposer.org/installer | php
+
+# composer の移動
+sudo mv composer.phar /usr/local/bin/composer
+
+# composer 起動
+composer
+# Composer version 1.9.0 2019-08-02 20:55:32 ...
+
+# PHP7.1をインストールするる
+sudo yum -y install php71 php71-cli php71-common php71-devel php71-mysqlnd php71-pdo php71-xml php71-gd php71-intl php71-mbstring php71-mcrypt php71-opcache php71-pecl-apcu php71-pecl-imagick php71-pecl-memcached php71-pecl-redis php71-pecl-xdebug
+
+# バージョンを最新版に変更する。
+sudo alternatives --set php /usr/bin/php-7.1
+
+# バージョン確認
+php -v
+# PHP 7.1.30 (cli) (built: Jun 12 2019 20:55:28) ( NTS )
+
+# Laravelをインストール
+composer global require "laravel/installer"
+
+# MySQLのバージョンアップ
+sudo service mysqld stop
+sudo yum -y erase mysql-config mysql55-server mysql55-libs mysql55
+sudo yum -y install mysql57-server mysql57
+mysql -v
+sudo service mysqld start
+
+sudo vi /etc/my.cnf
+[mysqld]
+character-set-server=utf8
+[client]
+default-character-set=utf8
+
+sudo service mysqld restart
+sudo mysql
+mysql> show variables like "chara%";
+
++--------------------------+------------------------------+
+| Variable_name            | Value                        |
++--------------------------+------------------------------+
+| character_set_client     | utf8                         |
+| character_set_connection | utf8                         |
+| character_set_database   | utf8                         |
+| character_set_filesystem | binary                       |
+| character_set_results    | utf8                         |
+| character_set_server     | utf8                         |
+| character_set_system     | utf8                         |
+| character_sets_dir       | /usr/share/mysql57/charsets/ |
++--------------------------+------------------------------+
+
+mysql> exit;
+mysql -V
+# mysql  Ver 14.14 Distrib 5.7.26, for Linux (x86_64) using  EditLine wrapper
+
